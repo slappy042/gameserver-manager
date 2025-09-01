@@ -25,6 +25,18 @@
             typer
             rich
             pydantic
+            # Additional dependencies for full functionality
+            psutil          # For process management and system info
+            requests        # For potential future web API calls
+          ];
+          
+          # Runtime system dependencies
+          propagatedBuildInputs = with pkgs; [
+            steamcmd
+            systemd
+            patchelf
+            gnutar
+            unzip
           ];
           
           pythonImportsCheck = [ "gameserver" ];
@@ -33,13 +45,22 @@
             description = "Modern CLI tool for managing game servers on NixOS";
             homepage = "https://github.com/slappy042/gameserver-manager";
             license = licenses.mit;
-            maintainers = [ ];
+            maintainers = with maintainers; [ /* add your maintainer info here */ ];
+            platforms = platforms.linux; # Specifically for Linux/NixOS
+            mainProgram = "gameserver";
           };
         };
       in
       {
         packages.default = gameserver-manager;
         packages.gameserver-manager = gameserver-manager;
+        
+        # Overlay for integrating into nixpkgs
+        overlays.default = import ./overlay.nix;
+        
+        # NixOS module
+        nixosModules.default = import ./nixos-module.nix;
+        nixosModules.gameserver-manager = import ./nixos-module.nix;
         
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
@@ -49,13 +70,36 @@
             # System dependencies for game servers
             steamcmd
             systemd
-          ];
+            # Development tools
+            ruff          # Fast Python linter and formatter
+            mypy          # Type checking
+            # Additional system tools that game servers might need
+            patchelf      # For fixing NixOS executables
+            gnutar        # For extracting game archives
+            unzip         # For extracting zip files
+            curl          # For downloads
+          ] ++ (with python.pkgs; [
+            # Python development dependencies
+            pytest
+            pytest-cov
+            black
+            isort
+          ]);
           
           shellHook = ''
             echo "🎮 Gameserver Manager Development Environment"
             echo "Python: ${python.version}"
-            echo "Run 'just setup' to initialize the project"
-            echo "Run 'just --list' to see available commands"
+            echo "SteamCMD: $(steamcmd --version 2>/dev/null | head -1 || echo 'available')"
+            echo ""
+            echo "Available commands:"
+            echo "  just setup      - Initialize the project"
+            echo "  just test       - Run tests"
+            echo "  just lint       - Run linting"
+            echo "  just --list     - See all available commands"
+            echo "  uv run gameserver --help  - Run the CLI tool"
+            echo ""
+            # Ensure services directory exists for development
+            mkdir -p ./services
           '';
         };
         
