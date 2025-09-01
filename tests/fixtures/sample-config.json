@@ -1,0 +1,22 @@
+{
+  "id": "7dtd",
+  "name": "7 Days to Die",
+  "description": "Survival game server",
+  "unitName": "game-7dtd",
+  "steamApp": "294420_stable",
+  "gameDir": "/home/sevendtd/games/steam/7dtd",
+  "executable": "/home/sevendtd/games/steam/7dtd/7DaysToDieServer.x86_64",
+  "user": "sevendtd",
+  "group": "sevendtd",
+  "workingDirectory": "/home/sevendtd/games/steam/7dtd",
+  "args": ["-configfile=serverconfig.xml", "-logfile=logs/output.log"],
+  "environment": {
+    "LD_LIBRARY_PATH": "/home/sevendtd/games/steam/7dtd"
+  },
+  "ports": [26900, 26901, 26902],
+  "configFile": "/home/sevendtd/games/steam/7dtd/serverconfig.xml",
+  "logDir": "/home/sevendtd/games/steam/7dtd/logs",
+  "cleanFilters": [
+    "/home/sevendtd/.local/share/7DaysToDie"
+  ]
+}
