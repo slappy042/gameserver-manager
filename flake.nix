@@ -105,7 +105,11 @@
       # System-agnostic outputs (overlays and NixOS modules)
       overlays.default = import ./overlay.nix;
       
-      nixosModules.default = import ./nixos-module.nix;
-      nixosModules.gameserver-manager = import ./nixos-module.nix;
+      nixosModules.default = { pkgs, ... }: 
+        import ./nixos-module.nix { 
+          inherit pkgs; 
+          gameserver-manager-package = gameserver-manager; 
+        };
+      nixosModules.gameserver-manager = nixosModules.default;
     };
 }

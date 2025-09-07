@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, gameserver-manager-package ? null, ... }:
 
 with lib;
 
@@ -9,6 +9,8 @@ let
   gameserver-manager = 
     if cfg.package != null 
     then cfg.package
+    else if gameserver-manager-package != null
+    then gameserver-manager-package
     else pkgs.gameserver-manager or (throw "gameserver-manager package not found. Please add overlay or set services.gameserver-manager.package");
     
 in {
@@ -18,7 +20,7 @@ in {
     package = mkOption {
       type = types.nullOr types.package;
       default = null;
-      description = "The gameserver-manager package to use. Defaults to pkgs.gameserver-manager if available.";
+      description = "The gameserver-manager package to use. Defaults to the flake's own package.";
     };
     
     gamesDir = mkOption {
