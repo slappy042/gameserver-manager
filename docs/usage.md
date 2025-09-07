@@ -7,7 +7,7 @@
 Show all configured games and their status:
 
 ```bash
-gameserver status
+gameserver-manager status
 ```
 
 This displays:
@@ -20,7 +20,7 @@ This displays:
 List all available games with descriptions:
 
 ```bash
-gameserver list
+gameserver-manager list
 ```
 
 ### Game Information
@@ -28,12 +28,12 @@ gameserver list
 Show detailed information about a specific game:
 
 ```bash
-gameserver info <game-id>
+gameserver-manager info <game-id>
 ```
 
 Example:
 ```bash
-gameserver info 7dtd
+gameserver-manager info 7dtd
 ```
 
 This shows:
@@ -50,10 +50,10 @@ Download or update game files using SteamCMD:
 
 ```bash
 # Download if needed
-gameserver update <game-id>
+gameserver-manager update <game-id>
 
 # Force re-download
-gameserver update <game-id> --force
+gameserver-manager update <game-id> --force
 ```
 
 The tool automatically:
@@ -68,13 +68,13 @@ Start, stop, and restart game services:
 
 ```bash
 # Start a game server
-gameserver start <game-id>
+gameserver-manager start <game-id>
 
 # Stop a game server
-gameserver stop <game-id>
+gameserver-manager stop <game-id>
 
 # Restart a game server
-gameserver restart <game-id>
+gameserver-manager restart <game-id>
 ```
 
 The tool automatically:
@@ -89,16 +89,16 @@ Show recent logs from a game service:
 
 ```bash
 # Show last 50 lines
-gameserver logs <game-id>
+gameserver-manager logs <game-id>
 
 # Show last 100 lines
-gameserver logs <game-id> -n 100
+gameserver-manager logs <game-id> -n 100
 
 # Follow logs in real-time
-gameserver logs <game-id> -f
+gameserver-manager logs <game-id> -f
 
 # Show logs since yesterday
-gameserver logs <game-id> --since yesterday
+gameserver-manager logs <game-id> --since yesterday
 ```
 
 Additional `journalctl` arguments are passed through.
@@ -111,13 +111,13 @@ Remove game files and optionally user data:
 
 ```bash
 # Remove only game installation
-gameserver clean <game-id>
+gameserver-manager clean <game-id>
 
 # Remove game files and user data
-gameserver clean <game-id> --user-data
+gameserver-manager clean <game-id> --user-data
 
 # Remove everything
-gameserver clean <game-id> --all
+gameserver-manager clean <game-id> --all
 ```
 
 The clean command:
@@ -131,7 +131,7 @@ The clean command:
 Check port status for all games:
 
 ```bash
-gameserver network
+gameserver-manager network
 ```
 
 This shows:
@@ -144,7 +144,7 @@ This shows:
 Show disk usage for all game installations:
 
 ```bash
-gameserver disk
+gameserver-manager disk
 ```
 
 This displays:
@@ -180,11 +180,11 @@ The tool returns appropriate exit codes:
 #!/bin/bash
 
 # Check if a game is running
-if gameserver info mygame | grep -q "Status: active"; then
+if gameserver-manager info mygame | grep -q "Status: active"; then
     echo "Game is running"
 else
     echo "Game is not running"
-    gameserver start mygame
+    gameserver-manager start mygame
 fi
 ```
 
@@ -211,45 +211,45 @@ ports=$(jq -r '.ports[]' ~/services/mygame.json)
 
 2. Test configuration:
    ```bash
-   gameserver info newgame
+   gameserver-manager info newgame
    ```
 
 3. Download game files:
    ```bash
-   gameserver update newgame
+   gameserver-manager update newgame
    ```
 
 4. Start the server:
    ```bash
-   gameserver start newgame
+   gameserver-manager start newgame
    ```
 
 5. Check status:
    ```bash
-   gameserver status
+   gameserver-manager status
    ```
 
 ### Troubleshooting a Game
 
 1. Check detailed info:
    ```bash
-   gameserver info problematic-game
+   gameserver-manager info problematic-game
    ```
 
 2. View recent logs:
    ```bash
-   gameserver logs problematic-game
+   gameserver-manager logs problematic-game
    ```
 
 3. Stop and clean download:
    ```bash
-   gameserver stop problematic-game
-   gameserver update problematic-game --force
+   gameserver-manager stop problematic-game
+   gameserver-manager update problematic-game --force
    ```
 
 4. Restart:
    ```bash
-   gameserver start problematic-game
+   gameserver-manager start problematic-game
    ```
 
 ### Maintenance Tasks
@@ -258,17 +258,17 @@ Weekly maintenance routine:
 
 ```bash
 # Check status of all games
-gameserver status
+gameserver-manager status
 
 # Check disk usage
-gameserver disk
+gameserver-manager disk
 
 # Check network status
-gameserver network
+gameserver-manager network
 
 # Update any games that need it
 for game in $(jq -r '.id' ~/services/*.json); do
-    gameserver update "$game"
+    gameserver-manager update "$game"
 done
 ```
 
@@ -287,18 +287,18 @@ All errors include suggestions for resolution.
 
 The CLI maintains the same command structure as the original justfile:
 
-| justfile command | gameserver command |
+| justfile command | gameserver-manager command |
 |---|---|
-| `just status` | `gameserver status` |
-| `just list` | `gameserver list` |
-| `just info <game>` | `gameserver info <game>` |
-| `just update <game>` | `gameserver update <game>` |
-| `just start <game>` | `gameserver start <game>` |
-| `just stop <game>` | `gameserver stop <game>` |
-| `just restart <game>` | `gameserver restart <game>` |
-| `just clean <game>` | `gameserver clean <game>` |
-| `just logs <game>` | `gameserver logs <game>` |
-| `just network` | `gameserver network` |
-| `just disk` | `gameserver disk` |
+| `just status` | `gameserver-manager status` |
+| `just list` | `gameserver-manager list` |
+| `just info <game>` | `gameserver-manager info <game>` |
+| `just update <game>` | `gameserver-manager update <game>` |
+| `just start <game>` | `gameserver-manager start <game>` |
+| `just stop <game>` | `gameserver-manager stop <game>` |
+| `just restart <game>` | `gameserver-manager restart <game>` |
+| `just clean <game>` | `gameserver-manager clean <game>` |
+| `just logs <game>` | `gameserver-manager logs <game>` |
+| `just network` | `gameserver-manager network` |
+| `just disk` | `gameserver-manager disk` |
 
 The behavior should be identical, but with improved error handling and output formatting.

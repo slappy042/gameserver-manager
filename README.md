@@ -38,7 +38,7 @@ nix develop
 uv sync
 
 # Run the tool
-uv run gameserver status
+uv run gameserver-manager status
 ```
 
 ## Usage
@@ -47,27 +47,27 @@ The CLI maintains the same command structure as the original justfile:
 
 ```bash
 # Show all services status
-gameserver status
+gameserver-manager status
 
 # List available games
-gameserver list
+gameserver-manager list
 
 # Show detailed game information
-gameserver info <game>
+gameserver-manager info <game>
 
 # Update/download game files
-gameserver update <game> [--force]
+gameserver-manager update <game> [--force]
 
 # Service management
-gameserver start <game>
-gameserver stop <game>
-gameserver restart <game>
+gameserver-manager start <game>
+gameserver-manager stop <game>
+gameserver-manager restart <game>
 
 # Maintenance
-gameserver clean <game> [--user-data]
-gameserver logs <game> [args...]
-gameserver network
-gameserver disk
+gameserver-manager clean <game> [--user-data]
+gameserver-manager logs <game> [args...]
+gameserver-manager network
+gameserver-manager disk
 ```
 
 ## Configuration

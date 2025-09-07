@@ -731,17 +731,17 @@ gameserver-manager/
 The CLI should maintain the same command structure as the current justfile:
 
 ```bash
-gameserver status                    # Show all services status
-gameserver list                      # List available games
-gameserver info <game>               # Show detailed game info
-gameserver update <game> [--force]   # Update/download game files
-gameserver start <game>              # Start game service  
-gameserver stop <game>               # Stop game service
-gameserver restart <game>            # Restart game service
-gameserver clean <game> [--user-data] # Clean/uninstall game
-gameserver logs <game> [args...]     # Show service logs
-gameserver network                   # Show network status
-gameserver disk                      # Show disk usage
+gameserver-manager status                    # Show all services status
+gameserver-manager list                      # List available games
+gameserver-manager info <game>               # Show detailed game info
+gameserver-manager update <game> [--force]   # Update/download game files
+gameserver-manager start <game>              # Start game service  
+gameserver-manager stop <game>               # Stop game service
+gameserver-manager restart <game>            # Restart game service
+gameserver-manager clean <game> [--user-data] # Clean/uninstall game
+gameserver-manager logs <game> [args...]     # Show service logs
+gameserver-manager network                   # Show network status
+gameserver-manager disk                      # Show disk usage
 ```
 
 ## Data Models (Pydantic)
@@ -983,13 +983,13 @@ After implementation, the existing justfile would be replaced with:
 # All commands delegate to the Python CLI
 
 status:
-    gameserver status
+    gameserver-manager status
 
 update game *options="":  
-    gameserver update {{game}} {{options}}
+    gameserver-manager update {{game}} {{options}}
 
 start game:
-    gameserver start {{game}}
+    gameserver-manager start {{game}}
 
 # ... etc for all commands
 ```

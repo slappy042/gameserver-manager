@@ -146,7 +146,7 @@ Common environment variables for games:
 
 ## Clean Filters
 
-Clean filters specify what to remove during `gameserver clean --user-data`:
+Clean filters specify what to remove during `gameserver-manager clean --user-data`:
 
 ```json
 {
@@ -230,7 +230,7 @@ These files are automatically managed by the tool.
 
 The tool validates configurations when loading. Common issues:
 
-- **Missing executable**: Run `gameserver update <game>` to download files.
+- **Missing executable**: Run `gameserver-manager update <game>` to download files.
 - **Invalid paths**: Ensure all paths exist and are accessible.
 - **Permission issues**: Ensure the specified user can access all paths.
 - **Invalid JSON**: Use a JSON validator to check syntax.
@@ -241,5 +241,5 @@ To migrate from the existing justfile setup:
 
 1. Copy existing service JSON files to `~/services/`
 2. Update any deprecated field names (the tool handles most aliases)
-3. Test each game: `gameserver info <game>`
-4. Verify functionality: `gameserver status`
+3. Test each game: `gameserver-manager info <game>`
+4. Verify functionality: `gameserver-manager status`

@@ -1,7 +1,7 @@
 [project]
 name = "gameserver-manager"
 version = "0.1.0"
-description = "Modern CLI tool for managing game servers on NixOS"
+description = "A CLI tool for managing Nix-defined game services"
 authors = [{name = "Jeff", email = "jeff@example.com"}]
 readme = "README.md"
 license = {text = "MIT"}
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-gameserver = "gameserver.cli:app"
+gameserver-manager = "gameserver.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/slappy042/gameserver-manager"

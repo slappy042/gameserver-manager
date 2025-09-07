@@ -1,5 +1,5 @@
 {
-  description = "Modern CLI tool for managing game servers on NixOS";
+  description = "A CLI tool for managing Nix-defined game services";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -16,6 +16,8 @@
           pname = "gameserver-manager";
           version = "0.1.0";
           src = ./.;
+          
+          pyproject = true;
           
           build-system = with python.pkgs; [
             hatchling
@@ -54,13 +56,6 @@
       {
         packages.default = gameserver-manager;
         packages.gameserver-manager = gameserver-manager;
-        
-        # Overlay for integrating into nixpkgs
-        overlays.default = import ./overlay.nix;
-        
-        # NixOS module
-        nixosModules.default = import ./nixos-module.nix;
-        nixosModules.gameserver-manager = import ./nixos-module.nix;
         
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
@@ -106,5 +101,11 @@
         apps.default = flake-utils.lib.mkApp {
           drv = gameserver-manager;
         };
-      });
+      }) // {
+      # System-agnostic outputs (overlays and NixOS modules)
+      overlays.default = import ./overlay.nix;
+      
+      nixosModules.default = import ./nixos-module.nix;
+      nixosModules.gameserver-manager = import ./nixos-module.nix;
+    };
 }

@@ -144,7 +144,7 @@ networking.firewall = {
 
 ### Important: This Tool Uses Declarative Game Configurations
 
-**This is not a general-purpose game installer** - you cannot run `gameserver install <random-steam-game>`. Instead, this tool uses **declarative Nix modules** to define game services.
+**This is not a general-purpose game installer** - you cannot run `gameserver-manager install <random-steam-game>`. Instead, this tool uses **declarative Nix modules** to define game services.
 
 **Proper workflow using Nix modules:**
 
@@ -192,9 +192,9 @@ imports = [ ./games/valheim.nix ];
 
 **After rebuild, use the CLI:**
 ```bash
-gameserver update valheim    # Downloads the game
-gameserver start valheim     # Starts the server
-gameserver status           # Shows all configured games
+gameserver-manager update valheim    # Downloads the game
+gameserver-manager start valheim     # Starts the server
+gameserver-manager status           # Shows all configured games
 ```
 
 See `docs/examples/7days-to-die.nix` for a complete real-world example.
@@ -246,10 +246,10 @@ nix develop
 uv pip install -e .
 
 # Test your fixes directly
-uv run gameserver status
+uv run gameserver-manager status
 
 # Or run with full path to avoid conflicts
-/tmp/gameserver-debug/.venv/bin/gameserver status
+/tmp/gameserver-debug/.venv/bin/gameserver-manager status
 ```
 
 ### Method 2: Overlay Override (Proper Testing)
@@ -408,7 +408,7 @@ nix copy --to ssh://production-server ./result
 
 # On production, temporarily override
 export PATH="/nix/store/debug-version/bin:$PATH"
-gameserver status
+gameserver-manager status
 ```
 
 ### Method 8: Live System Logging
@@ -456,14 +456,14 @@ journalctl -u gameserver-manager-* --since "1 hour ago" | grep ERROR
 
 ```bash
 # 1. Quick assessment - what's broken?
-gameserver status
+gameserver-manager status
 journalctl -u gameserver-manager-* --since "10 minutes ago"
 
 # 2. Set up debug environment
 nix develop github:slappy042/gameserver-manager/main
 
 # 3. Test fix locally first
-uv run gameserver --debug status
+uv run gameserver-manager --debug status
 
 # 4. If working, apply via overlay override
 # (add local-debug.nix as shown above)
@@ -472,7 +472,7 @@ uv run gameserver --debug status
 sudo nixos-rebuild switch
 
 # 6. Test fix
-gameserver status
+gameserver-manager status
 
 # 7. If working, push fix and update system to use official version
 # If broken, rollback immediately

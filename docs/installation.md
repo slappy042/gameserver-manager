@@ -53,14 +53,14 @@ nix develop
 uv sync
 
 # Run the tool
-uv run gameserver status
+uv run gameserver-manager status
 ```
 
 ### Available Commands in Dev Shell
 
 ```bash
 # Run the tool
-uv run gameserver <command>
+uv run gameserver-manager <command>
 
 # Run tests
 uv run pytest
