@@ -102,13 +102,13 @@
           drv = gameserver-manager;
         };
       }) // {
-      # System-agnostic outputs (overlays and NixOS modules)
+      # System-agnostic outputs
       overlays.default = import ./overlay.nix;
       
       nixosModules.default = { pkgs, ... }: 
         import ./nixos-module.nix { 
           inherit pkgs; 
-          gameserver-manager-package = gameserver-manager; 
+          gameserver-manager-package = self.packages.${pkgs.system}.gameserver-manager; 
         };
       nixosModules.gameserver-manager = nixosModules.default;
     };
