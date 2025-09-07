@@ -21,54 +21,14 @@ in {
       description = "The gameserver-manager package to use. Defaults to pkgs.gameserver-manager if available.";
     };
     
-    servicesDir = mkOption {
-      type = types.path;
-      default = if cfg.user == "gameserver" 
-                then "/var/lib/gameserver-manager/services"
-                else "/home/${cfg.user}/services";
-      description = "Directory containing game service configuration files";
-    };
-    
     gamesDir = mkOption {
       type = types.path; 
-      default = if cfg.user == "gameserver"
-                then "/var/lib/gameserver-manager/games" 
-                else "/home/${cfg.user}/games";
-      description = "Directory where game files are stored";
-    };
-    
-    user = mkOption {
-      type = types.str;
-      default = "gameserver";
-      description = "User account for running game servers";
-    };
-    
-    group = mkOption {
-      type = types.str;
-      default = "gameserver";
-      description = "Group for the game server user";
-    };
-    
-    extraGroups = mkOption {
-      type = types.listOf types.str;
-      default = [];
-      description = "Additional groups for the game server user";
-    };
-    
-    openFirewall = mkOption {
-      type = types.bool;
-      default = false;
-      description = "Whether to automatically open firewall ports for configured games";
+      default = "\${HOME}/games";
+      description = "Directory where game files are stored (defaults to \$HOME/games)";
     };
     
     steamcmd = {
       enable = mkEnableOption "SteamCMD integration";
-      
-      user = mkOption {
-        type = types.str;
-        default = cfg.user;
-        description = "User for SteamCMD operations";
-      };
     };
   };
   
@@ -81,83 +41,21 @@ in {
       pkgs.steamcmd
     ];
     
-    # Create game server user and group
-    users.groups.${cfg.group} = {};
-    
-    users.users.${cfg.user} = {
-      isSystemUser = true;
-      group = cfg.group;
-      extraGroups = cfg.extraGroups;
-      home = cfg.gamesDir;
-      createHome = true;
-      description = "Game server management user";
-    };
-    
-    # Create required directories
+    # Create required directories (using environment variables for user paths)
     systemd.tmpfiles.rules = [
-      "d ${cfg.servicesDir} 0755 ${cfg.user} ${cfg.group} -"
-      "d ${cfg.gamesDir} 0755 ${cfg.user} ${cfg.group} -"
-      "d /var/log/gameserver-manager 0755 ${cfg.user} ${cfg.group} -"
-    ];
-    
-    # Add gameserver-manager to PATH for all users
+      "d %h/games/services 0755 - - -"
+      "d %h/games 0755 - - -"
+      "d /var/log/gameserver-manager 0755 - - -"
+        # Add gameserver-manager to PATH for all users
     environment.variables = {
-      GAMESERVER_SERVICES_DIR = cfg.servicesDir;
-      GAMESERVER_GAMES_DIR = cfg.gamesDir;
+      GAMESERVER_SERVICES_DIR = "\${HOME}/games/services";
+      GAMESERVER_GAMES_DIR = "\${HOME}/games";
     };
-    
-    # Security: Allow game server user to manage systemd services
-    security.sudo.extraRules = [{
-      users = [ cfg.user ];
-      commands = [
-        {
-          command = "${pkgs.systemd}/bin/systemctl";
-          options = [ "NOPASSWD" ];
-        }
-        {
-          command = "${pkgs.systemd}/bin/journalctl";
-          options = [ "NOPASSWD" ];  
-        }
-      ];
-    }];
-    
     # Optional: SteamCMD setup
     programs.steam.enable = mkIf cfg.steamcmd.enable true;
     
     # Add shell completion
     environment.pathsToLink = [ "/share/bash-completion" "/share/zsh" "/share/fish" ];
-    
-    # Firewall configuration (if enabled)
-    networking.firewall = mkIf cfg.openFirewall {
-      # TODO: This should dynamically read ports from game configurations
-      # For now, this opens the common game server port range
-      # Individual games should specify their ports in the JSON configs
-      allowedTCPPorts = [ 
-        # Common game server ports - customize based on your games
-        # 26900 26901 26902  # 7 Days to Die example
-        # 27015              # Source engine games
-        # 25565              # Minecraft
-      ]; 
-      allowedUDPPorts = [
-        # Same ports as TCP for most games
-        # 26900 26901 26902  # 7 Days to Die example  
-        # 27015              # Source engine games
-        # 25565              # Minecraft
-      ];
-    };
-    
-    # Create a systemd service for potential background operations
-    systemd.services.gameserver-manager-setup = {
-      description = "Gameserver Manager Initial Setup";
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        Type = "oneshot";
-        User = cfg.user;
-        Group = cfg.group;
-        ExecStart = "${pkgs.coreutils}/bin/mkdir -p ${cfg.servicesDir} ${cfg.gamesDir}";
-        RemainAfterExit = true;
-      };
-    };
   };
   
   meta = {

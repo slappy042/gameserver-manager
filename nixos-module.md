@@ -18,7 +18,6 @@ Add to your `flake.nix`:
           services.gameserver-manager = {
             enable = true;
             steamcmd.enable = true;
-            openFirewall = true;  # Optional: auto-open ports
           };
         }
       ];
@@ -34,39 +33,28 @@ Add to your `flake.nix`:
 - **Default**: false
 - **Description**: Enable the gameserver-manager service
 
-### `services.gameserver-manager.servicesDir`
-- **Type**: path
-- **Default**: "/var/lib/gameserver-manager/services"  
-- **Description**: Directory containing game service configuration files
-
 ### `services.gameserver-manager.gamesDir`
 - **Type**: path
-- **Default**: "/var/lib/gameserver-manager/games"
+- **Default**: "\$HOME/games"
 - **Description**: Directory where game files are stored
 
-### `services.gameserver-manager.user`
-- **Type**: string
-- **Default**: "gameserver"
-- **Description**: User account for running game servers
+### `services.gameserver-manager.servicesDir` (read-only)
+- **Type**: path (automatically derived)
+- **Value**: "\$HOME/games/services"
+- **Description**: Directory containing game service configuration files (automatically set to gamesDir/services)
 
 ### `services.gameserver-manager.steamcmd.enable`
 - **Type**: boolean  
 - **Default**: false
 - **Description**: Enable SteamCMD integration and Steam support
 
-### `services.gameserver-manager.openFirewall`
-- **Type**: boolean
-- **Default**: false
-- **Description**: Automatically open firewall ports for configured games
-
 ## What the Module Provides
 
-- **System User**: Creates a dedicated `gameserver` user and group
-- **Directories**: Sets up required directories with proper permissions
-- **Permissions**: Configures sudo access for systemd service management
+- **Directory Setup**: Sets up required directories with proper permissions in users' home directories
 - **Environment**: Sets up environment variables for the tool
-- **SteamCMD**: Optional integration with Steam for downloading games
-- **Firewall**: Optional automatic firewall configuration
+- **SteamCMD**: Optional integration with Steam for downloading games  
+
+**Note**: The module uses each user's `$HOME/games` directory automatically. No user management required.
 
 ## Example Full Configuration
 
@@ -74,34 +62,54 @@ Add to your `flake.nix`:
 services.gameserver-manager = {
   enable = true;
   
-  # Custom directories
-  servicesDir = "/etc/gameserver/services";
+  # Optional: custom games directory (defaults to $HOME/games)
   gamesDir = "/srv/games";
-  
-  # Custom user
-  user = "games";
-  group = "games";
-  extraGroups = [ "audio" "video" ];  # If games need these
+  # Note: servicesDir will automatically be /srv/games/services
   
   # Enable Steam support
   steamcmd.enable = true;
-  
-  # Auto-configure firewall
-  openFirewall = true;
 };
 ```
 
 ## Security Considerations
 
-The module grants the gameserver user `sudo` access to `systemctl` and `journalctl` commands without a password. This is necessary for managing transient systemd services but should be considered in your security model.
+The module sets up directory permissions but does not grant any special privileges. Users manage game servers with their own user permissions.
+
+Game servers will run with the permissions of the user who starts them.
+
+## Firewall Configuration
+
+This module does not automatically configure firewall ports, as NixOS firewall configuration should be declarative. Instead, configure firewall ports in your NixOS configuration alongside your game service definitions.
+
+Example for a 7 Days to Die server:
+
+```nix
+{
+  services.gameserver-manager.enable = true;
+  
+  # Configure firewall ports for your specific games
+  networking.firewall = {
+    allowedTCPPorts = [ 26900 ];
+    allowedUDPPorts = [ 26900 26901 26902 ];
+  };
+}
+```
+
+For a more organized approach, define your game servers as separate NixOS modules that include both the game configuration and required firewall ports.
 
 ## Directory Structure
 
-After enabling, you'll have:
+After enabling, each user will have:
 
 ```
-/var/lib/gameserver-manager/
-├── services/          # Game configuration files
-├── games/            # Game installation directories
-└── logs/             # Game server logs
+$HOME/games/
+├── services/          # Game configuration files  
+├── <game1>/          # Game installation directories
+├── <game2>/          # Game installation directories
+└── ...
+```
+
+And system logs in:
+```
+/var/log/gameserver-manager/     # Game server logs
 ```

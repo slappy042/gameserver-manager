@@ -77,26 +77,16 @@ This document shows different ways to integrate gameserver-manager into your Nix
         gameserver-manager.nixosModules.default
         
         {
-          # Enable the service for your primary user
+          # Enable the service
           services.gameserver-manager = {
             enable = true;
-            steamcmd.enable = true;
-            openFirewall = false;  # Set to false - doesn't work yet
+            steamcmd.enable = true;  # Optional: enable Steam integration
             
-            # Use your primary user for personal usage
-            # NOTE: When user != "gameserver", paths automatically default to home directory
-            user = "yourusername";
-            group = "users";
-            
-            # Paths are auto-detected based on user:
-            # - user = "gameserver" → system paths (/var/lib/gameserver-manager/*)
-            # - user = anything else → home paths (~/games, ~/services)
-            # You can override these if needed:
-            # gamesDir = "/home/yourusername/games";      # auto: ~/games
-            # servicesDir = "/home/yourusername/services"; # auto: ~/services
+            # Optional: override default directory (defaults to $HOME/games)
+            # gamesDir = "/srv/games";
           };
           
-          # Required: Manual firewall configuration
+          # Required: Manual firewall configuration for your games
           networking.firewall = {
             allowedTCPPorts = [ 26900 26901 26902 25565 ];  # Your game ports
             allowedUDPPorts = [ 26900 26901 26902 25565 ];  # Usually same as TCP
@@ -113,21 +103,18 @@ This document shows different ways to integrate gameserver-manager into your Nix
 }
 ```
 
-### Understanding `openFirewall` Option
+### How the Module Works
 
-**NixOS Firewall Basics:**
-- NixOS has a **built-in firewall enabled by default** that **denies all incoming connections**
-- It uses **iptables** under the hood, but you configure it declaratively via Nix
-- **No need for ufw, firewalld, etc.** - NixOS manages iptables directly through configuration
-- All firewall rules are defined in your `configuration.nix` or flake modules
+The NixOS module automatically:
+- Sets up environment variables pointing to `$HOME/games` and `$HOME/games/services`
+- Creates directory structure in each user's home directory when they first use the tool
+- Optionally enables SteamCMD integration system-wide
 
-**What `openFirewall = true` does:**
-- **Currently: Nothing - this is a stub option with no functionality**
-- **Intended behavior**: Would automatically read the `ports` field from your game configurations (e.g., `[26900, 26901, 26902]`) and add those ports to `networking.firewall.allowedTCPPorts` and `allowedUDPPorts`
-- **Current reality**: The option exists but doesn't open any ports - you must configure firewall manually
+No user management is required - the tool works with any user's home directory.
 
-**Manual firewall configuration (required for now):**
-Since `openFirewall` doesn't work yet, you must manually add ports to your NixOS configuration:
+### Manual Firewall Configuration (Required)
+
+The module does not automatically configure firewall ports, as this should be declarative. Configure firewall ports explicitly in your NixOS configuration:
 ```nix
 networking.firewall = {
   allowedTCPPorts = [ 26900 26901 26902 ];  # Your game ports
@@ -135,12 +122,7 @@ networking.firewall = {
 };
 ```
 
-**When to use each approach:**
-- `openFirewall = true`: **Don't use this yet - it's a placeholder that does nothing**
-- `openFirewall = false`: **Use this** and manually configure firewall (works today)
-- Manual `networking.firewall` config: **Required approach** until automatic port detection is implemented
-
-**Current status:** The `openFirewall` feature is a stub - set it to `false` and configure your firewall manually.
+For a more organized approach, define your game servers as separate NixOS modules that include both the game configuration and required firewall ports.
 
 ### Important: This Tool Uses Declarative Game Configurations
 
@@ -159,7 +141,7 @@ networking.firewall = {
 { config, lib, pkgs, ... }:
 let
   gamingLib = import ./lib.nix { inherit lib config; };
-  gameDir = "${config.users.users.jeff.home}/games/valheim";
+  gameDir = "\${HOME}/games/valheim";
 in
 {
   # Register the game service declaratively
@@ -173,7 +155,6 @@ in
       executable = "${gameDir}/valheim_server.x86_64";
       args = [ "-name" "MyServer" "-port" "2456" ];
       ports = [ 2456 2457 2458 ];
-      user = "jeff";
     })
   ];
   
