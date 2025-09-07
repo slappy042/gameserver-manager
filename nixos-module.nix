@@ -46,7 +46,9 @@ in {
       "d %h/games/services 0755 - - -"
       "d %h/games 0755 - - -"
       "d /var/log/gameserver-manager 0755 - - -"
-        # Add gameserver-manager to PATH for all users
+    ];
+    
+    # Add gameserver-manager to PATH for all users
     environment.variables = {
       GAMESERVER_SERVICES_DIR = "\${HOME}/games/services";
       GAMESERVER_GAMES_DIR = "\${HOME}/games";
