@@ -77,15 +77,29 @@ This document shows different ways to integrate gameserver-manager into your Nix
         gameserver-manager.nixosModules.default
         
         {
-          # Enable the service
+          # Enable the service for your primary user
           services.gameserver-manager = {
             enable = true;
             steamcmd.enable = true;
-            openFirewall = true;
+            openFirewall = false;  # Set to false - doesn't work yet
             
-            # Optional customization
-            gamesDir = "/srv/gameserver/games";
-            servicesDir = "/etc/gameserver/services";
+            # Use your primary user for personal usage
+            # NOTE: When user != "gameserver", paths automatically default to home directory
+            user = "yourusername";
+            group = "users";
+            
+            # Paths are auto-detected based on user:
+            # - user = "gameserver" → system paths (/var/lib/gameserver-manager/*)
+            # - user = anything else → home paths (~/games, ~/services)
+            # You can override these if needed:
+            # gamesDir = "/home/yourusername/games";      # auto: ~/games
+            # servicesDir = "/home/yourusername/services"; # auto: ~/services
+          };
+          
+          # Required: Manual firewall configuration
+          networking.firewall = {
+            allowedTCPPorts = [ 26900 26901 26902 25565 ];  # Your game ports
+            allowedUDPPorts = [ 26900 26901 26902 25565 ];  # Usually same as TCP
           };
           
           # The package is automatically available
@@ -98,6 +112,92 @@ This document shows different ways to integrate gameserver-manager into your Nix
   };
 }
 ```
+
+### Understanding `openFirewall` Option
+
+**NixOS Firewall Basics:**
+- NixOS has a **built-in firewall enabled by default** that **denies all incoming connections**
+- It uses **iptables** under the hood, but you configure it declaratively via Nix
+- **No need for ufw, firewalld, etc.** - NixOS manages iptables directly through configuration
+- All firewall rules are defined in your `configuration.nix` or flake modules
+
+**What `openFirewall = true` does:**
+- **Currently: Nothing - this is a stub option with no functionality**
+- **Intended behavior**: Would automatically read the `ports` field from your game configurations (e.g., `[26900, 26901, 26902]`) and add those ports to `networking.firewall.allowedTCPPorts` and `allowedUDPPorts`
+- **Current reality**: The option exists but doesn't open any ports - you must configure firewall manually
+
+**Manual firewall configuration (required for now):**
+Since `openFirewall` doesn't work yet, you must manually add ports to your NixOS configuration:
+```nix
+networking.firewall = {
+  allowedTCPPorts = [ 26900 26901 26902 ];  # Your game ports
+  allowedUDPPorts = [ 26900 26901 26902 ];  # Your game ports
+};
+```
+
+**When to use each approach:**
+- `openFirewall = true`: **Don't use this yet - it's a placeholder that does nothing**
+- `openFirewall = false`: **Use this** and manually configure firewall (works today)
+- Manual `networking.firewall` config: **Required approach** until automatic port detection is implemented
+
+**Current status:** The `openFirewall` feature is a stub - set it to `false` and configure your firewall manually.
+
+### Important: This Tool Uses Declarative Game Configurations
+
+**This is not a general-purpose game installer** - you cannot run `gameserver install <random-steam-game>`. Instead, this tool uses **declarative Nix modules** to define game services.
+
+**Proper workflow using Nix modules:**
+
+1. **Create a Nix module** for your game (like `games/valheim.nix`)
+2. **The module declaratively defines** the game service configuration
+3. **NixOS rebuild generates** the JSON service files automatically
+4. **Then use the CLI tools** to manage the declared games
+
+**Example game module:**
+```nix
+# games/valheim.nix
+{ config, lib, pkgs, ... }:
+let
+  gamingLib = import ./lib.nix { inherit lib config; };
+  gameDir = "${config.users.users.jeff.home}/games/valheim";
+in
+{
+  # Register the game service declaratively
+  imports = [
+    (gamingLib.registerGameService {
+      id = "valheim";
+      name = "Valheim Server";
+      description = "Viking survival dedicated server";
+      steamApp = "896660";
+      gameDir = gameDir;
+      executable = "${gameDir}/valheim_server.x86_64";
+      args = [ "-name" "MyServer" "-port" "2456" ];
+      ports = [ 2456 2457 2458 ];
+      user = "jeff";
+    })
+  ];
+  
+  # Firewall configuration
+  networking.firewall = {
+    allowedTCPPorts = [ 2456 ];
+    allowedUDPPorts = [ 2456 2457 2458 ];
+  };
+}
+```
+
+**Then in your main config:**
+```nix
+imports = [ ./games/valheim.nix ];
+```
+
+**After rebuild, use the CLI:**
+```bash
+gameserver update valheim    # Downloads the game
+gameserver start valheim     # Starts the server
+gameserver status           # Shows all configured games
+```
+
+See `docs/examples/7days-to-die.nix` for a complete real-world example.
 
 ## Method 4: Legacy Nix (No Flakes)
 

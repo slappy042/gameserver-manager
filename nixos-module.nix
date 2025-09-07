@@ -23,13 +23,17 @@ in {
     
     servicesDir = mkOption {
       type = types.path;
-      default = "/var/lib/gameserver-manager/services";
+      default = if cfg.user == "gameserver" 
+                then "/var/lib/gameserver-manager/services"
+                else "/home/${cfg.user}/services";
       description = "Directory containing game service configuration files";
     };
     
     gamesDir = mkOption {
       type = types.path; 
-      default = "/var/lib/gameserver-manager/games";
+      default = if cfg.user == "gameserver"
+                then "/var/lib/gameserver-manager/games" 
+                else "/home/${cfg.user}/games";
       description = "Directory where game files are stored";
     };
     
@@ -125,10 +129,21 @@ in {
     
     # Firewall configuration (if enabled)
     networking.firewall = mkIf cfg.openFirewall {
-      # This would need to be populated based on actual game configurations
-      # For now, just ensure the framework is there
-      allowedTCPPorts = []; 
-      allowedUDPPorts = [];
+      # TODO: This should dynamically read ports from game configurations
+      # For now, this opens the common game server port range
+      # Individual games should specify their ports in the JSON configs
+      allowedTCPPorts = [ 
+        # Common game server ports - customize based on your games
+        # 26900 26901 26902  # 7 Days to Die example
+        # 27015              # Source engine games
+        # 25565              # Minecraft
+      ]; 
+      allowedUDPPorts = [
+        # Same ports as TCP for most games
+        # 26900 26901 26902  # 7 Days to Die example  
+        # 27015              # Source engine games
+        # 25565              # Minecraft
+      ];
     };
     
     # Create a systemd service for potential background operations

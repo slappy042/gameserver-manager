@@ -18,7 +18,7 @@ from .services.validation import ValidationService
 # Initialize Typer app and Rich console
 app = typer.Typer(
     name="gameserver",
-    help="Modern CLI tool for managing game servers on NixOS",
+    help="A CLI tool for managing Nix-defined game services",
     no_args_is_help=True,
 )
 console = Console()
