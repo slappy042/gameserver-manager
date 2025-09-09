@@ -64,6 +64,5 @@ in {
   
   meta = {
     maintainers = with lib.maintainers; [ /* add maintainer info */ ];
-    doc = ./nixos-module.md;
   };
 }
