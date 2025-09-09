@@ -95,9 +95,9 @@
       
       nixosModules = 
         let
-          module = { pkgs, ... }: 
+          module = { config, lib, pkgs, ... }: 
             import ./nixos-module.nix { 
-              inherit pkgs; 
+              inherit config lib pkgs; 
               gameserver-manager-package = self.packages.${system}.default; 
             };
         in {
