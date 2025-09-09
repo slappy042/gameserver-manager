@@ -25,7 +25,7 @@ in {
     
     gamesDir = mkOption {
       type = types.path; 
-      default = "\${HOME}/games";
+      default = "$HOME/games";
       description = "Directory where game files are stored (defaults to \$HOME/games)";
     };
     
@@ -49,12 +49,7 @@ in {
       "d %h/games 0755 - - -"
       "d /var/log/gameserver-manager 0755 - - -"
     ];
-    
-    # Add gameserver-manager to PATH for all users
-    environment.variables = {
-      GAMESERVER_SERVICES_DIR = "\${HOME}/games/services";
-      GAMESERVER_GAMES_DIR = "\${HOME}/games";
-    };
+
     # Optional: SteamCMD setup
     programs.steam.enable = mkIf cfg.steamcmd.enable true;
     

@@ -19,10 +19,10 @@ class ServiceRegistry:
         
         Args:
             services_dir: Directory containing service JSON files. 
-                         Defaults to ~/services
+                         Defaults to ~/games/services
         """
         if services_dir is None:
-            services_dir = Path.home() / "services"
+            services_dir = Path.home() / "games" / "services"
         self.services_dir = services_dir
         self._configs: dict[str, ServiceConfig] = {}
         self._load_configs()

@@ -20,7 +20,7 @@ class GameNotFoundError(GameserverError):
         if available_games:
             suggestion = f"Available games: {', '.join(available_games)}"
         else:
-            suggestion = "No games configured. Check ~/services/ directory."
+            suggestion = "No games configured. Check ~/games/services/ directory."
         super().__init__(message, suggestion)
 
 
