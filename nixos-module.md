@@ -1,4 +1,4 @@
-# Gameserver Manager NixOS Module
+# Gameserver Manager NixOS Module {#gameserver-manager-nixos-module}
 
 This NixOS module provides system-level integration for the gameserver-manager tool.
 
