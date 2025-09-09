@@ -6,7 +6,7 @@ from pathlib import Path
 from rich.console import Console
 
 from ..exceptions import ValidationError
-from ..models import DownloadMarker, ServiceConfig
+from ..models import DownloadMarker, ServiceConfig, GameSource
 
 console = Console()
 
@@ -63,8 +63,8 @@ class ValidationService:
                 f"Executable path is not a file: {config.executable}"
             )
         
-        # If steam app is configured, validate download marker
-        if config.steam_app:
+        # If steam game is configured, validate download marker
+        if config.game_source.type == "steam":
             marker_file = config.game_dir / ".steamcmd-completed"
             marker = ValidationService.validate_download_marker(marker_file)
             
@@ -80,20 +80,22 @@ class ValidationService:
                     f"Run 'gameserver update {config.id}' to retry"
                 )
             
-            # Validate that the steam app matches
-            if marker.steam_app != config.steam_app:
+            # Validate that the game source matches
+            if (marker.game_source.type != config.game_source.type or 
+                marker.game_source.source_id != config.game_source.source_id):
                 raise ValidationError(
-                    f"Steam app mismatch: expected {config.steam_app}, got {marker.steam_app}",
+                    f"Game source mismatch: expected {config.game_source.type}:{config.game_source.source_id}, "
+                    f"got {marker.game_source.type}:{marker.game_source.source_id}",
                     f"Run 'gameserver update {config.id}' to update"
                 )
     
     @staticmethod
-    def needs_download(marker_file: Path, steam_app: str, force: bool = False) -> bool:
+    def needs_download(marker_file: Path, game_source: "GameSource", force: bool = False) -> bool:
         """Check if a download is needed.
         
         Args:
             marker_file: Path to the download marker
-            steam_app: Steam app ID with branch
+            game_source: Game source configuration
             force: Force download even if files exist
             
         Returns:
@@ -107,8 +109,9 @@ class ValidationService:
             if marker is None:
                 return True
             
-            # Check if it's the same steam app
-            if marker.steam_app != steam_app:
+            # Check if it's the same game source
+            if (marker.game_source.type != game_source.type or
+                marker.game_source.source_id != game_source.source_id):
                 return True
             
             # Check if download was successful

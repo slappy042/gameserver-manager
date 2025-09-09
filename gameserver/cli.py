@@ -39,6 +39,18 @@ def handle_error(error: Exception) -> None:
     raise typer.Exit(1)
 
 
+def format_game_source(game_source) -> str:
+    """Format game source information for display."""
+    source_info = f"{game_source.type.title()}"
+    if game_source.type == "steam":
+        source_info += f" (App ID: {game_source.source_id})"
+        if game_source.metadata.get("branch"):
+            source_info += f" - {game_source.metadata['branch']}"
+    else:
+        source_info += f" (ID: {game_source.source_id})"
+    return source_info
+
+
 @app.command()
 def status() -> None:
     """Show all game services and their status."""
@@ -70,7 +82,7 @@ def status() -> None:
         
         # Check download status
         download_status = "not-downloaded"
-        if config.steam_app:
+        if config.game_source.type == "steam":
             marker_file = config.game_dir / ".steamcmd-completed"
             try:
                 marker = ValidationService.validate_download_marker(marker_file)
@@ -118,7 +130,7 @@ def list() -> None:
     for config in games:
         console.print(f"[bold]Game: {config.name} ({config.id})[/bold]")
         console.print(f"  Description: {config.description}")
-        console.print(f"  Steam App: {config.steam_app or 'N/A'}")
+        console.print(f"  Source: {format_game_source(config.game_source)}")
         console.print()
 
 
@@ -134,7 +146,7 @@ def info(game: str) -> None:
     console.print()
     console.print(f"Game ID: {config.id}")
     console.print(f"Service Name: {config.unit_name}")
-    console.print(f"Steam App: {config.steam_app or 'N/A'}")
+    console.print(f"Source: {format_game_source(config.game_source)}")
     console.print(f"Game Directory: {config.game_dir}")
     console.print(f"Executable: {config.executable}")
     console.print(f"Ports: {', '.join(map(str, config.ports)) if config.ports else 'N/A'}")
@@ -151,7 +163,7 @@ def info(game: str) -> None:
     console.print(f"Current Status: [{status_color}]{status}[/{status_color}]")
     
     # Show download status if marker exists
-    if config.steam_app:
+    if config.game_source.type == "steam":
         marker_file = config.game_dir / ".steamcmd-completed"
         try:
             marker = ValidationService.validate_download_marker(marker_file)
@@ -159,8 +171,9 @@ def info(game: str) -> None:
                 console.print()
                 console.print("[bold cyan]=== Download Status ===[/bold cyan]")
                 console.print(f"Last Updated: {marker.last_updated}")
-                console.print(f"Steam App: {marker.steam_app}")
-                console.print(f"Beta Branch: {marker.beta_branch}")
+                console.print(f"Source: {marker.game_source.type.title()} (ID: {marker.game_source.source_id})")
+                if marker.game_source.metadata.get("branch"):
+                    console.print(f"Branch: {marker.game_source.metadata['branch']}")
                 console.print(f"Download Status: {marker.download_status}")
                 console.print(f"File Count: {marker.file_count}")
                 console.print(f"Total Size: {marker.total_size}")
@@ -203,13 +216,14 @@ def update(
     try:
         config = registry.get_config(game)
         
-        if not config.steam_app:
-            console.print(f"[red]No Steam app configured for {config.name}[/red]")
+        if config.game_source.type != "steam":
+            console.print(f"[red]Only Steam games are currently supported for download. {config.name} uses {config.game_source.type}[/red]")
             raise typer.Exit(1)
         
         # Check if download is needed
         marker_file = config.game_dir / ".steamcmd-completed"
-        if not force and not ValidationService.needs_download(marker_file, config.steam_app, force):
+            
+        if not force and not ValidationService.needs_download(marker_file, config.game_source, force):
             try:
                 marker = ValidationService.validate_download_marker(marker_file)
                 if marker:
@@ -234,7 +248,7 @@ def start(game: str) -> None:
         console.print(f"Starting {config.name}...")
         
         # Validate game files if steam app is configured
-        if config.steam_app:
+        if config.game_source.type == "steam":
             ValidationService.validate_game_files(config)
             console.print("[green]✓ Game files verified[/green]")
         
