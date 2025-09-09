@@ -3,16 +3,17 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-        python = pkgs.python313;
-        
-        gameserver-manager = python.pkgs.buildPythonApplication {
+  outputs = { self, nixpkgs }:
+    let
+      system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
+      python = pkgs.python313;
+    in
+    {
+      packages.${system} = {
+        default = python.pkgs.buildPythonApplication {
           pname = "gameserver-manager";
           version = "0.1.0";
           src = ./.;
@@ -27,9 +28,8 @@
             typer
             rich
             pydantic
-            # Additional dependencies for full functionality
-            psutil          # For process management and system info
-            requests        # For potential future web API calls
+            psutil
+            requests
           ];
           
           # Runtime system dependencies
@@ -47,69 +47,62 @@
             description = "Modern CLI tool for managing game servers on NixOS";
             homepage = "https://github.com/slappy042/gameserver-manager";
             license = licenses.mit;
-            maintainers = with maintainers; [ /* add your maintainer info here */ ];
-            platforms = platforms.linux; # Specifically for Linux/NixOS
-            mainProgram = "gameserver";
+            platforms = [ "x86_64-linux" ];
+            mainProgram = "gameserver-manager";
           };
         };
-      in
-      {
-        packages.default = gameserver-manager;
-        packages.gameserver-manager = gameserver-manager;
         
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            python
-            uv
-            just
-            # System dependencies for game servers
-            steamcmd
-            systemd
-            # Development tools
-            ruff          # Fast Python linter and formatter
-            mypy          # Type checking
-            # Additional system tools that game servers might need
-            patchelf      # For fixing NixOS executables
-            gnutar        # For extracting game archives
-            unzip         # For extracting zip files
-            curl          # For downloads
-          ] ++ (with python.pkgs; [
-            # Python development dependencies
-            pytest
-            pytest-cov
-            black
-            isort
-          ]);
-          
-          shellHook = ''
-            echo "🎮 Gameserver Manager Development Environment"
-            echo "Python: ${python.version}"
-            echo "SteamCMD: $(steamcmd --version 2>/dev/null | head -1 || echo 'available')"
-            echo ""
-            echo "Available commands:"
-            echo "  just setup      - Initialize the project"
-            echo "  just test       - Run tests"
-            echo "  just lint       - Run linting"
-            echo "  just --list     - See all available commands"
-            echo "  uv run gameserver --help  - Run the CLI tool"
-            echo ""
-            # Ensure services directory exists for development
-            mkdir -p ./services
-          '';
-        };
+        gameserver-manager = self.packages.${system}.default;
+      };
+
+      devShells.${system}.default = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          python
+          uv
+          just
+          steamcmd
+          systemd
+          ruff
+          mypy
+          patchelf
+          gnutar
+          unzip
+          curl
+        ] ++ (with python.pkgs; [
+          pytest
+          pytest-cov
+          black
+          isort
+        ]);
         
-        apps.default = flake-utils.lib.mkApp {
-          drv = gameserver-manager;
-        };
-      }) // {
+        shellHook = ''
+          echo "🎮 Gameserver Manager Development Environment"
+          echo "Python: ${python.version}"
+          echo "Available commands:"
+          echo "  just --list     - See all available commands"
+          echo "  uv run gameserver-manager --help  - Run the CLI tool"
+          mkdir -p ./services
+        '';
+      };
+
+      apps.${system}.default = {
+        type = "app";
+        program = "${self.packages.${system}.default}/bin/gameserver-manager";
+      };
+
       # System-agnostic outputs
       overlays.default = import ./overlay.nix;
       
-      nixosModules.default = { pkgs, ... }: 
-        import ./nixos-module.nix { 
-          inherit pkgs; 
-          gameserver-manager-package = self.packages.${pkgs.system}.gameserver-manager; 
+      nixosModules = 
+        let
+          module = { pkgs, ... }: 
+            import ./nixos-module.nix { 
+              inherit pkgs; 
+              gameserver-manager-package = self.packages.${system}.default; 
+            };
+        in {
+          default = module;
+          gameserver-manager = module;
         };
-      nixosModules.gameserver-manager = nixosModules.default;
     };
 }

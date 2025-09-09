@@ -33,7 +33,7 @@ final: prev: {
       license = licenses.mit;
       maintainers = with maintainers; [ /* add your maintainer info here */ ];
       platforms = platforms.linux;
-      mainProgram = "gameserver";
+      mainProgram = "gameserver-manager";
     };
   };
 }
