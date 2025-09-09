@@ -1,8 +1,8 @@
-# Gameserver Manager NixOS Module {#gameserver-manager-nixos-module}
+# Gameserver Manager NixOS Module
 
 This NixOS module provides system-level integration for the gameserver-manager tool.
 
-## Usage {#usage}
+## Usage
 
 Add to your `flake.nix`:
 
@@ -26,29 +26,29 @@ Add to your `flake.nix`:
 }
 ```
 
-## Configuration Options {#configuration-options}
+## Configuration Options
 
-### `services.gameserver-manager.enable` {#services-gameserver-manager-enable}
+### `services.gameserver-manager.enable`
 - **Type**: boolean
 - **Default**: false
 - **Description**: Enable the gameserver-manager service
 
-### `services.gameserver-manager.gamesDir` {#services-gameserver-manager-gamesdir}
+### `services.gameserver-manager.gamesDir`
 - **Type**: path
 - **Default**: "\$HOME/games"
 - **Description**: Directory where game files are stored
 
-### `services.gameserver-manager.servicesDir` (read-only) {#services-gameserver-manager-servicesdir}
+### `services.gameserver-manager.servicesDir` (read-only)
 - **Type**: path (automatically derived)
 - **Value**: "\$HOME/games/services"
 - **Description**: Directory containing game service configuration files (automatically set to gamesDir/services)
 
-### `services.gameserver-manager.steamcmd.enable` {#services-gameserver-manager-steamcmd-enable}
+### `services.gameserver-manager.steamcmd.enable`
 - **Type**: boolean  
 - **Default**: false
 - **Description**: Enable SteamCMD integration and Steam support
 
-## What the Module Provides {#what-the-module-provides}
+## What the Module Provides
 
 - **Directory Setup**: Sets up required directories with proper permissions in users' home directories
 - **Environment**: Sets up environment variables for the tool
@@ -56,7 +56,7 @@ Add to your `flake.nix`:
 
 **Note**: The module uses each user's `$HOME/games` directory automatically. No user management required.
 
-## Example Full Configuration {#example-full-configuration}
+## Example Full Configuration
 
 ```nix
 services.gameserver-manager = {
@@ -71,13 +71,13 @@ services.gameserver-manager = {
 };
 ```
 
-## Security Considerations {#security-considerations}
+## Security Considerations
 
 The module sets up directory permissions but does not grant any special privileges. Users manage game servers with their own user permissions.
 
 Game servers will run with the permissions of the user who starts them.
 
-## Firewall Configuration {#firewall-configuration}
+## Firewall Configuration
 
 This module does not automatically configure firewall ports, as NixOS firewall configuration should be declarative. Instead, configure firewall ports in your NixOS configuration alongside your game service definitions.
 
@@ -97,7 +97,7 @@ Example for a 7 Days to Die server:
 
 For a more organized approach, define your game servers as separate NixOS modules that include both the game configuration and required firewall ports.
 
-## Directory Structure {#directory-structure}
+## Directory Structure
 
 After enabling, each user will have:
 
