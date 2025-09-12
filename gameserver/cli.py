@@ -9,7 +9,7 @@ from typing import List, Optional
 import typer
 from rich.console import Console
 
-from .exceptions import GameserverError
+from .exceptions import GameServerError
 from .services.downloaders import DownloadManager
 from .services.registry import ServiceRegistry
 from .services.systemd import SystemdService
@@ -30,7 +30,7 @@ download_manager = DownloadManager()
 
 def handle_error(error: Exception) -> None:
     """Handle and display errors with Rich formatting."""
-    if isinstance(error, GameserverError):
+    if isinstance(error, GameServerError):
         console.print(f"[red]Error: {error.message}[/red]")
         if error.suggestion:
             console.print(f"[yellow]Suggestion: {error.suggestion}[/yellow]")
@@ -128,7 +128,8 @@ def list() -> None:
         return
     
     for config in games:
-        console.print(f"[bold]Game: {config.name} ({config.id})[/bold]")
+        console.print(f"[bold]Game: {config.name}[/bold]")
+        console.print(f"  ID: {config.id}")
         console.print(f"  Description: {config.description}")
         console.print(f"  Source: {format_game_source(config.game_source)}")
         console.print()

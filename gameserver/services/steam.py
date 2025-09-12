@@ -11,11 +11,12 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from ..exceptions import SteamCMDError
 from ..models import DownloadMarker, ServiceConfig
-from .downloaders import BaseDownloader
+from .downloaders import BaseDownloader, register_downloader
 
 console = Console()
 
 
+@register_downloader
 class SteamCMDService(BaseDownloader):
     """Handles SteamCMD operations for game downloads."""
     

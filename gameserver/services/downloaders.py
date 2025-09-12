@@ -6,6 +6,24 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from ..models import ServiceConfig, DownloadMarker
+from ..exceptions import GameServerError
+
+
+# Registry for decorated downloaders
+_registered_downloaders: list[type[BaseDownloader]] = []
+
+
+def register_downloader(cls: type[BaseDownloader]) -> type[BaseDownloader]:
+    """Decorator to automatically register downloaders.
+    
+    Args:
+        cls: The downloader class to register
+        
+    Returns:
+        The same class (for decorator chaining)
+    """
+    _registered_downloaders.append(cls)
+    return cls
 
 
 class BaseDownloader(ABC):
@@ -83,11 +101,17 @@ class DownloadManager:
     
     def get_downloader(self, config: ServiceConfig) -> BaseDownloader:
         """Get appropriate downloader for the given configuration."""
+        # Check manually registered downloaders first
         for downloader in self._downloaders:
             if downloader.can_handle(config):
                 return downloader
         
-        from ..exceptions import GameServerError
+        # Check decorated downloaders from the registry
+        for downloader_cls in _registered_downloaders:
+            downloader = downloader_cls()
+            if downloader.can_handle(config):
+                return downloader
+        
         raise GameServerError(
             f"No downloader available for game source: {config.game_source}",
             config.id
@@ -111,3 +135,6 @@ class DownloadManager:
 
 # Global download manager instance
 download_manager = DownloadManager()
+
+# Import all downloader modules to trigger decorator registration
+from . import steam  # noqa: F401

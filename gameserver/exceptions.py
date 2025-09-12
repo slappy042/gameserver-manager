@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-class GameserverError(Exception):
+class GameServerError(Exception):
     """Base exception for all gameserver manager errors."""
     
     def __init__(self, message: str, suggestion: str | None = None) -> None:
@@ -12,7 +12,7 @@ class GameserverError(Exception):
         super().__init__(message)
 
 
-class GameNotFoundError(GameserverError):
+class GameNotFoundError(GameServerError):
     """Raised when a requested game is not found in the registry."""
     
     def __init__(self, game_id: str, available_games: list[str]) -> None:
@@ -24,21 +24,21 @@ class GameNotFoundError(GameserverError):
         super().__init__(message, suggestion)
 
 
-class ServiceError(GameserverError):
+class ServiceError(GameServerError):
     """Raised when systemd service operations fail."""
     pass
 
 
-class SteamCMDError(GameserverError):
+class SteamCMDError(GameServerError):
     """Raised when SteamCMD operations fail."""
     pass
 
 
-class ValidationError(GameserverError):
+class ValidationError(GameServerError):
     """Raised when file or configuration validation fails."""
     pass
 
 
-class PermissionError(GameserverError):
+class PermissionError(GameServerError):
     """Raised when permission-related operations fail."""
     pass
