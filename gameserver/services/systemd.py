@@ -34,6 +34,27 @@ class SystemdService:
             return False
     
     @staticmethod
+    def is_managed(unit_name: str) -> bool:
+        """Check if a systemd unit exists and is being managed by systemd.
+        
+        Args:
+            unit_name: The systemd unit name
+            
+        Returns:
+            True if the service exists (in any state: active, activating, failed, etc.)
+        """
+        try:
+            result = subprocess.run(
+                ["sudo", "systemctl", "status", unit_name],
+                capture_output=True,
+                check=False
+            )
+            # Return code 0 = active, 1 = dead, 3 = failed/activating, 4 = not found
+            return result.returncode != 4
+        except Exception:
+            return False
+    
+    @staticmethod
     def get_status(unit_name: str) -> str:
         """Get the status of a systemd unit.
         
@@ -73,8 +94,6 @@ class SystemdService:
             f"--unit={config.unit_name}",
             f"--uid={config.user}",
             f"--gid={config.group}",
-            "--property=Restart=always",
-            "--property=RestartSec=5",
             "--collect"
         ]
         
@@ -107,8 +126,8 @@ class SystemdService:
         Raises:
             ServiceError: If the service fails to stop
         """
-        if not SystemdService.is_active(config.unit_name):
-            console.print(f"[yellow]{config.name} was not running[/yellow]")
+        if not SystemdService.is_managed(config.unit_name):
+            console.print(f"[yellow]{config.name} is not running or managed by systemd[/yellow]")
             return
         
         try:
