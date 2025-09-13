@@ -171,7 +171,11 @@ class SystemdService:
         try:
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
-            raise ServiceError(f"Failed to get logs: {e}") from e
+            # If journalctl was interrupted by user (Ctrl+C), that's normal behavior
+            if e.returncode == -2 or e.returncode == 130:  # SIGINT
+                pass
+            else:
+                raise ServiceError(f"Failed to get logs: {e}") from e
         except KeyboardInterrupt:
             # Allow user to interrupt log viewing
             pass
