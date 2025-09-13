@@ -99,14 +99,57 @@ class SteamCMDService(BaseDownloader):
             game_dir: Game installation directory
         """
         try:
-            for file_path in game_dir.rglob("*"):
-                if file_path.is_file() and file_path.stat().st_mode & 0o111:
-                    # Try to patch the interpreter for NixOS
-                    subprocess.run(
-                        ["patchelf", "--set-interpreter", "/nix/store/*/lib/ld-linux-x86-64.so.2", str(file_path)],
-                        capture_output=True,
-                        check=False
-                    )
+            # Find the correct glibc path by using ldd on /bin/ls (which is always available)
+            ldd_result = subprocess.run(
+                ["ldd", "/bin/ls"],
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            
+            interpreter_path = None
+            if ldd_result.returncode == 0:
+                # Look for the ld-linux-x86-64.so.2 line in ldd output
+                for line in ldd_result.stdout.split('\n'):
+                    if 'ld-linux-x86-64.so.2' in line and '=>' in line:
+                        # Extract the path after '=>'
+                        interpreter_path = line.split('=>')[1].strip().split()[0]
+                        break
+            
+            # Fallback: try to find it directly in nix store
+            if not interpreter_path:
+                find_result = subprocess.run(
+                    ["find", "/nix/store", "-maxdepth", "2", "-name", "glibc-*"],
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                if find_result.returncode == 0 and find_result.stdout.strip():
+                    glibc_dir = find_result.stdout.strip().split('\n')[0]
+                    potential_path = f"{glibc_dir}/lib64/ld-linux-x86-64.so.2"
+                    if Path(potential_path).exists():
+                        interpreter_path = potential_path
+            
+            if interpreter_path and Path(interpreter_path).exists():
+                for file_path in game_dir.rglob("*"):
+                    if file_path.is_file() and file_path.stat().st_mode & 0o111:
+                        # Check if it's an ELF executable that needs patching
+                        file_result = subprocess.run(
+                            ["file", str(file_path)],
+                            capture_output=True,
+                            text=True,
+                            check=False
+                        )
+                        
+                        if ("ELF" in file_result.stdout and 
+                            "dynamically linked" in file_result.stdout and
+                            "x86-64" in file_result.stdout):
+                            # Try to patch the interpreter for NixOS
+                            subprocess.run(
+                                ["patchelf", "--set-interpreter", interpreter_path, str(file_path)],
+                                capture_output=True,
+                                check=False
+                            )
         except Exception:
             # Patchelf might fail on some files, that's okay
             pass

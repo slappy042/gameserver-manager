@@ -75,8 +75,7 @@ class SystemdService:
             f"--gid={config.group}",
             "--property=Restart=always",
             "--property=RestartSec=5",
-            "--collect",
-            "--remain-after-exit=no"
+            "--collect"
         ]
         
         # Add working directory if specified
