@@ -285,14 +285,20 @@ def restart(game: str) -> None:
 @app.command()
 def logs(
     game: str,
-    args: Optional[List[str]] = None
+    follow: bool = typer.Option(False, "-f", "--follow", help="Follow log output (like tail -f)"),
+    lines: int = typer.Option(50, "-n", "--lines", help="Number of recent lines to show"),
+    args: Optional[List[str]] = typer.Option(None, "--args", help="Additional arguments to pass to journalctl")
 ) -> None:
     """Show recent logs for a game."""
     try:
         config = registry.get_config(game)
         
         if args is None:
-            args = ["--no-pager", "-n", "50"]
+            args = ["--no-pager"]
+            if follow:
+                args.append("-f")
+            else:
+                args.extend(["-n", str(lines)])
         
         SystemdService.get_logs(config.unit_name, args)
         
