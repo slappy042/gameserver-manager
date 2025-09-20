@@ -45,6 +45,7 @@ class ServiceConfig(BaseModel):
     config_file: Path | None = Field(None, alias="configFile", description="Game configuration file path")
     log_dir: Path | None = Field(None, alias="logDir", description="Log directory path")
     clean_filters: list[str] = Field(default_factory=list, alias="cleanFilters", description="Paths to clean during uninstall")
+    shutdown_command: list[str] | None = Field(None, alias="shutdownCommand", description="Custom shutdown command (if not using systemctl stop)")
     
     @field_validator("group")
     @classmethod

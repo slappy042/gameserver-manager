@@ -130,6 +130,37 @@ class SystemdService:
             console.print(f"[yellow]{config.name} is not running or managed by systemd[/yellow]")
             return
         
+        # Try custom shutdown command first if available
+        if config.shutdown_command:
+            console.print(f"[yellow]Using custom shutdown command for {config.name}...[/yellow]")
+            try:
+                result = subprocess.run(
+                    config.shutdown_command,
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+                console.print(f"[green]✓ {config.name} shutdown command executed successfully[/green]")
+                
+                # Wait for service to stop naturally (up to 30 seconds)
+                import time
+                for _ in range(30):
+                    if not SystemdService.is_active(config.unit_name):
+                        console.print(f"[green]✓ {config.name} stopped gracefully[/green]")
+                        return
+                    time.sleep(1)
+                
+                # If still running after 30 seconds, fall back to systemctl stop
+                console.print(f"[yellow]Service still running after custom shutdown, using systemctl stop as fallback[/yellow]")
+                
+            except subprocess.CalledProcessError as e:
+                console.print(f"[yellow]Custom shutdown command failed: {e.stderr}[/yellow]")
+                console.print(f"[yellow]Falling back to systemctl stop for {config.name}[/yellow]")
+            except Exception as e:
+                console.print(f"[yellow]Custom shutdown command error: {str(e)}[/yellow]")
+                console.print(f"[yellow]Falling back to systemctl stop for {config.name}[/yellow]")
+        
+        # Use systemctl stop (either as fallback or primary method)
         try:
             subprocess.run(
                 ["sudo", "systemctl", "stop", config.unit_name],
